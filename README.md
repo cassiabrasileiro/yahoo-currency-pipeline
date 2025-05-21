@@ -66,7 +66,8 @@ Ao final da execução, o pipeline imprime:
 - ✅ **Símbolos processados com sucesso** e quantidade de registros
 - ⚠️ **Falhas por símbolo**, com mensagens de erro detalhadas:
 
-### Exemplos:
+### Exemplo:
+
 ```bash
 ✅ Notificação: Registros inseridos:
 → USDBRL=X: 30 registros
@@ -76,15 +77,11 @@ Ao final da execução, o pipeline imprime:
 → ARSBRL=X: Falha na requisição HTTP (timeout, erro 429 ou falta de acesso)
 ```
 
-Isso permite entender rapidamente o que foi processado com sucesso e o que deu errado (sem logs difíceis de interpretar).
-
 ---
 
 ## 📊 Visualização dos Dados
 
-Execute o notebook `visualizacao_moedas.ipynb` para explorar graficamente as séries históricas de câmbio.
-
-Você também pode abrir diretamente no Colab:
+O notebook `visualizacao_moedas.ipynb` permite explorar graficamente as séries históricas de câmbio diretamente no Google Colab:
 
 [![Abrir no Google Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cassiabrasileiro/yahoo-currency-pipeline/blob/main/visualizacao_moedas.ipynb)
 
@@ -116,4 +113,4 @@ Você também pode abrir diretamente no Colab:
 ## 👩🏽‍💻 Desenvolvido por
 
 **Cássia Brasileiro**  
-[GitHub](https://github.com/cassiabrasileiro) • [LinkedIn](https://www.linkedin.com/in/cassia-brasileiro/)
+[GitHub](https://github.com/cassiabrasileiro) • [LinkedIn](https://www.linkedin.com/in/cassiasantos96/)
