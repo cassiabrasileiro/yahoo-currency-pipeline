@@ -24,7 +24,7 @@ Criar um pipeline de dados que:
 - Python 3.9+
 - pandas, requests, pyarrow
 - `ThreadPoolExecutor` para paralelismo
-- Formato Parquet para eficiência
+- Parquet para persistência eficiente
 - Google Colab para visualização
 
 ---
@@ -46,30 +46,62 @@ python main.py
 
 ## 📂 Estrutura de Saída
 
-Os arquivos são salvos em:
+Os arquivos são salvos localmente em:
 
 ```
 data/YYYY-MM-DD/{symbol}.parquet
 ```
 
+> ⚠️ A estrutura atual salva em disco local, mas pode ser facilmente adaptada para salvar em buckets (como S3 ou GCS) utilizando bibliotecas como `smart_open`, `s3fs` ou `gcsfs`.
+
 ---
 
-## 🔔 Notificações de Sucesso e Falha
+## 🔧 Decisões Técnicas
 
-Ao final da execução, o pipeline imprime:
+### 1. Estratégia de Extração
 
-- ✅ **Símbolos processados com sucesso** e quantidade de registros
-- ⚠️ **Falhas detalhadas por símbolo**, incluindo causas comuns como:
-  - Erros de conexão / timeout
-  - API indisponível ou bloqueada (HTTP 429)
-  - Arquivo vazio ou mal formatado
-  - Falha no schema/tabulação
+- Utilizamos chamadas simultâneas via `ThreadPoolExecutor` para paralelizar a coleta dos dados de múltiplos símbolos.
+- A extração inclui verificação de integridade temporal, validando se os dados possuem entradas do **dia atual**. Caso contrário, é registrada uma falha (ex: "dados desatualizados").
+
+### 2. Processamento e Modelagem
+
+- A estrutura tabular contém colunas como: `symbol`, `timestamp`, `open`, `close`, `high`, `low`, `volume`.
+- Com esses campos é possível:
+  - Traçar tendências temporais (timestamp)
+  - Calcular volatilidade (high - low)
+  - Medir liquidez e comportamento de abertura/fechamento (open, close, volume)
+- O schema foi pensado para atender análises descritivas, séries temporais e visualizações exploratórias.
+
+### 3. Persistência
+
+- O formato **Parquet** foi escolhido por ser leve, comprimido e orientado a colunas — ideal para consumo por ferramentas como Spark, BigQuery, Pandas.
+- A estrutura de pastas por data permite versionamento temporal, rastreabilidade e uso em camadas como *landing* ou *bronze*.
+
+### 4. Notificação
+
+- O pipeline envia notificações com os resultados da execução.
+- Suporte a:
+  - Prints locais (simulação)
+  - Slack Webhook (opcional)
+  - Email (via SMTP - recomendado para alertas reais)
+
+---
+
+## 🔔 Exemplo de Notificação por Email
+
+```text
+✅ Registros inseridos com sucesso:
+  - USDBRL=X: 30 registros
+  - EURBRL=X: 30 registros
+
+⚠️ Falhas detectadas:
+  - ARSBRL=X: Dados desatualizados ou API bloqueada (429)
+```
 
 ---
 
 ## 📊 Visualização Interativa
 
-A análise gráfica dos dados pode ser visualizada diretamente no Colab:  
 📎 [Notebook com visualizações no Google Colab](https://colab.research.google.com/drive/1tTJ22cdZ1PHFSHAqhMoXyFZU19_05jr7?usp=sharing)
 
 Inclui:
@@ -79,37 +111,13 @@ Inclui:
 
 ---
 
-## 🔧 Decisões Técnicas
-
-### 1. Estratégia de Extração
-
-> O uso de `requests` com `ThreadPoolExecutor` permite processar múltiplas chamadas simultaneamente, reduzindo o tempo total e isolando falhas por símbolo sem derrubar o pipeline todo.
-
-### 2. Arquitetura
-
-> O código é modular, com responsabilidades separadas por extração, transformação, persistência e notificação. Isso permite futura orquestração com ferramentas como Airflow ou inclusão de testes.
-
-### 3. Escolha pelo Formato Parquet
-
-> Parquet foi escolhido por ser compacto, orientado a colunas, e altamente compatível com ferramentas analíticas modernas. Comparado ao CSV, é mais eficiente tanto em leitura quanto em armazenamento.
-
-### 4. Tratamento de Falhas
-
-> Cada etapa do pipeline inclui tratamento específico de erro. Falhas são registradas por símbolo com mensagens como:
-- `Erro 429: API bloqueada por excesso de requisições`
-- `Dados retornaram vazios`
-- `Erro de leitura no Parquet`
-- `Problema de schema ou timestamp inválido`
-
----
-
 ## 🌱 Próximas Expansões
 
 | Ideia                          | Descrição rápida |
 |-------------------------------|------------------|
 | **Airflow**                   | Orquestrar execução diária |
 | **Docker**                    | Containerização para deploy |
-| **Slack/Kafka Alerts**        | Notificações automáticas |
+| **Slack/Email/Kafka Alerts**  | Notificações automáticas |
 | **Persistência no BigQuery**  | Destino analítico para dashboard |
 | **Testes e observabilidade**  | Alertas e validação de schema |
 
